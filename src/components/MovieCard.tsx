@@ -1,45 +1,89 @@
 import React from 'react';
-import { Star, Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Star, Info } from 'lucide-react';
+import { tmdbService } from '../services/tmdb';
+import { Movie, StreamingService } from '../types/movie';
 
 interface MovieCardProps {
-  title: string;
-  genres: string[];
-  rating: number;
-  imageUrl?: string;
-  streamingService: string;
+  movie: Movie;
+  showStreamingInfo?: boolean;
 }
 
-const MovieCard: React.FC<MovieCardProps> = ({ title, genres, rating, imageUrl, streamingService }) => {
+const MovieCard: React.FC<MovieCardProps> = ({ movie, showStreamingInfo = true }) => {
+  const navigate = useNavigate();
+  const [streamingServices, setStreamingServices] = React.useState<StreamingService[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStreamingServices = async () => {
+      try {
+        const services = await tmdbService.getMovieProviders(movie.id);
+        setStreamingServices(services);
+      } catch (error) {
+        console.error('Error fetching streaming services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (showStreamingInfo) {
+      fetchStreamingServices();
+    }
+  }, [movie.id, showStreamingInfo]);
+
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden active:scale-95 transition-transform">
-      <div className="aspect-w-16 aspect-h-9 bg-gray-200 relative group">
-        {imageUrl ? (
-          <img 
-            src={imageUrl} 
-            alt={title} 
-            className="object-cover w-full h-full"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
-            <span className="text-4xl">🎬</span>
+    <div className="group relative overflow-hidden rounded-lg bg-white dark:bg-gray-800 shadow-lg transition-transform duration-300 hover:scale-105">
+      <div className="relative aspect-[2/3]">
+        <img
+          src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+          alt={movie.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+          <h3 className="text-white font-semibold text-lg mb-2">{movie.title}</h3>
+          <div className="flex items-center space-x-2 text-white/80 text-sm mb-2">
+            <Star className="w-4 h-4 text-yellow-400" />
+            <span>{movie.vote_average.toFixed(1)}</span>
+            <span>•</span>
+            <span>{new Date(movie.release_date).getFullYear()}</span>
           </div>
-        )}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center">
-          <button className="opacity-0 group-hover:opacity-100 transform scale-90 group-hover:scale-100 transition-all">
-            <Play className="w-12 h-12 text-white" />
-          </button>
-        </div>
-        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-          <Star className="w-3 h-3 fill-current" />
-          {rating.toFixed(1)}
-        </div>
-      </div>
-      <div className="p-3">
-        <h3 className="font-semibold text-sm mb-1 line-clamp-2">{title}</h3>
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-500 line-clamp-1">{genres.join(', ')}</p>
-          <span className="text-xs font-medium text-red-600">{streamingService}</span>
+          {showStreamingInfo && (
+            <div className="flex items-center space-x-2 mb-4">
+              {loading ? (
+                <div className="animate-pulse flex space-x-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="w-6 h-6 bg-gray-700 rounded-full" />
+                  ))}
+                </div>
+              ) : (
+                streamingServices.slice(0, 3).map((service) => (
+                  <img
+                    key={service.provider_id}
+                    src={`https://image.tmdb.org/t/p/original${service.logo_path}`}
+                    alt={service.provider_name}
+                    className="w-6 h-6 rounded-full"
+                  />
+                ))
+              )}
+            </div>
+          )}
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => navigate(`/movie/${movie.id}`)}
+              className="flex items-center space-x-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-red-500/25 transform hover:-translate-y-0.5"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span className="font-medium">Watch Now</span>
+            </button>
+            <button 
+              onClick={() => navigate(`/movie/${movie.id}`)}
+              className="flex items-center space-x-1.5 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-200 border border-white/20 transform hover:-translate-y-0.5"
+            >
+              <Info className="w-4 h-4" />
+              <span className="font-medium">Details</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#7c3aed" />
-    <meta name="description" content="MoviesAreUs - Your Ultimate Movie Guide" />
+    <meta name="theme-color" content="#EF4444" />
+    <meta name="description" content="StreamMax - Your Ultimate Streaming Guide" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -21,7 +21,20 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>MoviesAreUs</title>
+    <title>StreamMax</title>
+    
+    <!-- Initialize dark mode based on user preference -->
+    <script>
+      (function() {
+        // Check for saved theme preference or use the system preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || 
+            (savedTheme === 'system' || !savedTheme) && 
+             window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
